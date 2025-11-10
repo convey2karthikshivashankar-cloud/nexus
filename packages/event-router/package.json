@@ -1,0 +1,17 @@
+{
+  "name": "@nexus/event-router",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@nexus/shared": "^1.0.0",
+    "@nexus/adapters-aws": "^1.0.0",
+    "@aws-sdk/client-kinesis": "^3.0.0",
+    "@aws-sdk/client-sns": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0"
+  }
+}

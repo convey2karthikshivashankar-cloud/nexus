@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "OrderCancelled",
+  "description": "Event emitted when an order is cancelled",
+  "properties": {
+    "reason": {
+      "type": "string",
+      "description": "Reason for cancellation"
+    }
+  },
+  "required": ["reason"]
+}
