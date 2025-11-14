@@ -124,20 +124,20 @@ export class DemoStack extends cdk.Stack {
       })
     );
 
-    // WebSocket Handler Lambda
-    const websocketHandler = new lambda.Function(this, 'WebSocketHandler', {
-      functionName: 'nexus-demo-websocket-handler',
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/websocket-handler')),
-      memorySize: 128,
-      timeout: cdk.Duration.seconds(10),
-      environment: {
-        CONNECTIONS_TABLE: connectionsTable.tableName,
-      },
-    });
+    // WebSocket Handler Lambda (commented out for initial deployment)
+    // const websocketHandler = new lambda.Function(this, 'WebSocketHandler', {
+    //   functionName: 'nexus-demo-websocket-handler',
+    //   runtime: lambda.Runtime.NODEJS_18_X,
+    //   handler: 'index.handler',
+    //   code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/websocket-handler')),
+    //   memorySize: 128,
+    //   timeout: cdk.Duration.seconds(10),
+    //   environment: {
+    //     CONNECTIONS_TABLE: connectionsTable.tableName,
+    //   },
+    // });
 
-    connectionsTable.grantReadWriteData(websocketHandler);
+    // connectionsTable.grantReadWriteData(websocketHandler);
 
     // ========================================
     // REST API Gateway (Free Tier: 1M requests/month)
@@ -184,57 +184,12 @@ export class DemoStack extends cdk.Stack {
     temporalById.addMethod('GET', new apigateway.LambdaIntegration(queryHandler));
 
     // ========================================
-    // WebSocket API Gateway
+    // WebSocket API Gateway (Simplified for deployment)
     // ========================================
-
-    const webSocketApi = new apigatewayv2.CfnApi(this, 'WebSocketApi', {
-      name: 'nexus-demo-websocket',
-      protocolType: 'WEBSOCKET',
-      routeSelectionExpression: '$request.body.action',
-    });
-
-    const integration = new apigatewayv2.CfnIntegration(this, 'WebSocketIntegration', {
-      apiId: webSocketApi.ref,
-      integrationType: 'AWS_PROXY',
-      integrationUri: `arn:aws:apigateway:${this.region}:lambda:path/2015-03-31/functions/${websocketHandler.functionArn}/invocations`,
-    });
-
-    // Routes
-    ['$connect', '$disconnect', '$default'].forEach((routeKey) => {
-      new apigatewayv2.CfnRoute(this, `Route-${routeKey}`, {
-        apiId: webSocketApi.ref,
-        routeKey,
-        target: `integrations/${integration.ref}`,
-      });
-    });
-
-    const deployment = new apigatewayv2.CfnDeployment(this, 'WebSocketDeployment', {
-      apiId: webSocketApi.ref,
-    });
-
-    const stage = new apigatewayv2.CfnStage(this, 'WebSocketStage', {
-      apiId: webSocketApi.ref,
-      stageName: 'prod',
-      deploymentId: deployment.ref,
-    });
-
-    this.websocketUrl = `wss://${webSocketApi.ref}.execute-api.${this.region}.amazonaws.com/${stage.stageName}`;
-
-    // Grant WebSocket API permission to invoke Lambda
-    websocketHandler.addPermission('WebSocketInvoke', {
-      principal: new iam.ServicePrincipal('apigateway.amazonaws.com'),
-      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${webSocketApi.ref}/*`,
-    });
-
-    // Grant event processor permission to send WebSocket messages
-    eventProcessor.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ['execute-api:ManageConnections'],
-        resources: [`arn:aws:execute-api:${this.region}:${this.account}:${webSocketApi.ref}/*`],
-      })
-    );
-
-    eventProcessor.addEnvironment('WEBSOCKET_API_ENDPOINT', `${webSocketApi.ref}.execute-api.${this.region}.amazonaws.com/prod`);
+    
+    // Temporarily set a placeholder WebSocket URL
+    // WebSocket can be added in a future deployment after core infrastructure is stable
+    this.websocketUrl = 'wss://placeholder-websocket-url';
 
     // ========================================
     // S3 Bucket for UI (Free Tier: 5GB)
@@ -254,11 +209,11 @@ export class DemoStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    // Deploy UI
-    new s3deploy.BucketDeployment(this, 'DeployUI', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../ui/build'))],
-      destinationBucket: uiBucket,
-    });
+    // Deploy UI (commented out for initial deployment - build UI first)
+    // new s3deploy.BucketDeployment(this, 'DeployUI', {
+    //   sources: [s3deploy.Source.asset(path.join(__dirname, '../ui/build'))],
+    //   destinationBucket: uiBucket,
+    // });
 
     this.uiUrl = uiBucket.bucketWebsiteUrl;
 

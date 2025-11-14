@@ -1,0 +1,27 @@
+{
+  "name": "nexus-demo",
+  "version": "1.0.0",
+  "description": "Nexus Blueprint 3.0 Interactive Demo",
+  "scripts": {
+    "build": "tsc",
+    "build:lambdas": "npm run build:command && npm run build:query && npm run build:processor",
+    "build:command": "esbuild lambda/command-handler/index.ts --bundle --platform=node --target=node18 --outfile=dist/command-handler.js --external:@aws-sdk/*",
+    "build:query": "esbuild lambda/query-handler/index.ts --bundle --platform=node --target=node18 --outfile=dist/query-handler.js --external:@aws-sdk/*",
+    "build:processor": "esbuild lambda/event-processor/index.ts --bundle --platform=node --target=node18 --outfile=dist/event-processor.js --external:@aws-sdk/*",
+    "deploy": "cdk deploy NexusDemoStack",
+    "destroy": "cdk destroy NexusDemoStack",
+    "synth": "cdk synth"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.100.0",
+    "esbuild": "^0.19.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}
