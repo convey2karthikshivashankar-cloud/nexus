@@ -1,4 +1,4 @@
-// Updated: Force rebuild v2
+// Updated: Force rebuild v3 - Fixed Orders and Events tabs
 import { useState, useEffect } from 'react'
 import { Activity, Zap, Database, GitBranch, BarChart3, Sparkles, Shield, Cpu, Globe, Layers } from 'lucide-react'
 import OrderDashboard from './components/OrderDashboard'
