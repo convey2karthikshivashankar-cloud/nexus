@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Schema Validation Hook",
+  "description": "Monitors JSON schema files in the schemas directory and triggers validation when they are edited to ensure schema integrity and compatibility",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "schemas/**/*.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A JSON schema file has been modified at {filePath}. Please:\n1. Validate the JSON syntax is correct\n2. Verify it follows JSON Schema specification standards\n3. Check for breaking changes compared to previous versions\n4. Ensure compatibility with the event-sourcing architecture\n5. Suggest any improvements for clarity or completeness\n6. If this is an event schema, verify it aligns with the DomainEvent type structure"
+  }
+}

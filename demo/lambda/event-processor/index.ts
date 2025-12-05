@@ -5,7 +5,7 @@ import { DynamoDBStreamEvent } from 'aws-lambda';
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-const ORDERS_TABLE = process.env.ORDERS_TABLE!;
+const ORDERS_TABLE = process.env.READ_MODEL_TABLE || process.env.ORDERS_TABLE!;
 
 export const handler = async (event: DynamoDBStreamEvent) => {
   console.log('Processing stream events:', event.Records.length);

@@ -67,8 +67,8 @@ export class DemoStack extends cdk.Stack {
     const commandHandler = new lambda.Function(this, 'CommandHandler', {
       functionName: 'nexus-demo-command-handler',
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/command-handler')),
+      handler: 'command-handler.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../dist')),
       memorySize: 128, // Minimum for free tier
       timeout: cdk.Duration.seconds(10),
       environment: {
@@ -84,8 +84,8 @@ export class DemoStack extends cdk.Stack {
     const queryHandler = new lambda.Function(this, 'QueryHandler', {
       functionName: 'nexus-demo-query-handler',
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/query-handler')),
+      handler: 'query-handler.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../dist')),
       memorySize: 128,
       timeout: cdk.Duration.seconds(10),
       environment: {
@@ -101,8 +101,8 @@ export class DemoStack extends cdk.Stack {
     const eventProcessor = new lambda.Function(this, 'EventProcessor', {
       functionName: 'nexus-demo-event-processor',
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/event-processor')),
+      handler: 'event-processor.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../dist')),
       memorySize: 128,
       timeout: cdk.Duration.seconds(10),
       environment: {

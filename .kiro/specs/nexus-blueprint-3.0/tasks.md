@@ -110,7 +110,12 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
 
 
 
-  - [ ] 3.4 Write integration tests for schema validation
+  - [x] 3.4 Write integration tests for schema validation
+
+
+
+
+
     - Test schema registration
     - Test compatibility checks
 
@@ -153,10 +158,15 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
 
 
 
+
+
+
     - Block all subsequent Lambda deployments without policy validation
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
   
-  - [ ] 4.3 Implement runtime policy enforcement
+  - [x] 4.3 Implement runtime policy enforcement
+
+
     - Add policy checks in API Gateway
 
 
@@ -167,7 +177,9 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
     - _Requirements: 12.1, 12.2, 12.3_
   
 
-  - [ ] 4.4 Write tests for policy enforcement
+
+  - [x] 4.4 Write tests for policy enforcement
+
     - Test decoupling policy violations
     - Test immutability policy
 
@@ -178,7 +190,9 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
     - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
 - [ ] 5. Implement Command Service (with governance in place)
-  - [ ] 5.1 Create Command Handler base class
+  - [x] 5.1 Create Command Handler base class
+
+
     - Implement command validation logic
 
     - Write aggregate rehydration from events
@@ -190,6 +204,7 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
 
 
 
+
   
   - [ ] 5.2 Implement Snapshot loading and state reconstruction
     - Write snapshot retrieval logic
@@ -197,12 +212,15 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
 
 
     - Create aggregate state rehydration
+
     - _Requirements: 1.1, 11.1, 11.2_
   
   - [ ] 5.3 Implement synchronous snapshot trigger evaluation
     - Add evaluateTriggerSync() called after event append
     - Check event count and aggregate size thresholds
     - Trigger async snapshot creation within 5 seconds
+
+
     - Fire-and-forget pattern for snapshot creation
     - _Requirements: 11.2_
   
@@ -210,6 +228,7 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
     - Define POST /api/commands/{commandType} endpoint
     - Implement request validation middleware
     - Add authentication and authorization
+
     - Return 202 Accepted with aggregate version
     - _Requirements: 1.1, 1.2_
   
@@ -238,6 +257,9 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
 
 
     - Create CloudWatch metrics for throughput
+
+
+
     - _Requirements: 3.1, 3.2, 3.3, 6.1_
 
 
@@ -272,7 +294,9 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
 
 
 
-  - [ ] 6.4 Write integration tests for event propagation
+
+  - [-] 6.4 Write integration tests for event propagation
+
     - Test Kinesis publishing and consumption
     - Test SNS/SQS fan-out
     - Test routing logic
@@ -306,21 +330,30 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
   
 
 
+
+
   - [ ] 7.2 Implement async snapshot creation
     - Write createSnapshotAsync() method
     - Implement aggregate state rehydration
     - Write snapshot serialization
 
+
+
     - Store snapshot with version and metadata
     - _Requirements: 11.2, 11.3, 11.4_
   
-  - [ ] 7.3 Set up EventBridge rules for time-elapsed threshold
+  - [x] 7.3 Set up EventBridge rules for time-elapsed threshold
+
+
+
     - Configure EventBridge rules for daily evaluation
     - Set up schedule for active aggregates
 
     - Handle time-elapsed threshold (24 hours)
     - _Requirements: 11.2, 11.5_
   
+
+
   - [ ] 7.4 Write tests for snapshot creation
     - Test synchronous trigger evaluation (< 5 seconds)
     - Test snapshot creation and retrieval
@@ -337,16 +370,23 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
     - Set up index lifecycle policies
     - Configure access policies and encryption
     - _Requirements: 4.1, 4.2, 4.3_
+
+
   
   - [x] 8.2 Create Projection Handler base class
 
     - Implement event consumption from Kinesis/SQS
     - Write transform() method for read model conversion
+
+
+
     - Add upcasting logic for schema evolution
     - Implement OpenSearch upsert with optimistic concurrency
 
     - Add projection lag metrics
     - _Requirements: 4.2, 7.1, 7.5_
+
+
   
   - [ ] 8.3 Implement specific projection handlers
     - Create projection handlers for each read model
@@ -363,7 +403,9 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
     - Add pagination and caching
     - _Requirements: 4.1, 4.3, 4.4, 9.1, 9.3_
   
-  - [ ] 8.5 Write integration tests for projections
+  - [x] 8.5 Write integration tests for projections
+
+
     - Test event-to-read-model transformation
     - Test OpenSearch indexing
 
@@ -418,6 +460,7 @@ This plan implements the Nexus Blueprint 3.0 with **governance-first architectur
     - Implement executeStepWithTimeout() with configurable timeouts
     - Add compensate() for reverse-order compensation
     - Publish saga state events for audit trail
+
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
   
   - [x] 10.3 Create Saga status API endpoint

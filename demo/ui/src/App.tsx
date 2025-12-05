@@ -1,606 +1,344 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  CardActions,
-  Chip,
-  LinearProgress,
-  Alert,
-  Tabs,
-  Tab,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Slider,
-} from '@mui/material';
-import {
-  ShoppingCart,
-  Timeline,
-  Speed,
-  Architecture,
-  History,
-  CheckCircle,
-  Cancel,
-  Pending,
-} from '@mui/icons-material';
-import './App.css';
+// Updated: Force rebuild v2
+import { useState, useEffect } from 'react'
+import { Activity, Zap, Database, GitBranch, BarChart3, Sparkles, Shield, Cpu, Globe, Layers } from 'lucide-react'
+import OrderDashboard from './components/OrderDashboard'
+import EventTimeline from './components/EventTimeline'
+import PerformanceMetrics from './components/PerformanceMetrics'
+import LoadTester from './components/LoadTester'
+import ArchitectureDiagram from './components/ArchitectureDiagram'
+import CQRSDemo from './components/CQRSDemo.tsx'
 
-// Configuration
-const API_URL = process.env.REACT_APP_API_URL || 'https://your-api.execute-api.us-east-1.amazonaws.com/prod';
-const WS_URL = process.env.REACT_APP_WS_URL || 'wss://your-ws.execute-api.us-east-1.amazonaws.com/prod';
+const API_URL = 'https://6lo5q41e31.execute-api.us-east-2.amazonaws.com/prod'
 
-interface Order {
-  orderId: string;
-  customerId: string;
-  status: 'PLACED' | 'CANCELLED' | 'COMPLETED';
-  totalAmount: number;
-  items: Array<{
-    productId: string;
-    quantity: number;
-    price: number;
-  }>;
-  placedAt: string;
-  cancelledAt?: string;
-  version: number;
+export interface Order {
+  orderId: string
+  customerId: string
+  status: string
+  totalAmount: number
+  items: any[]
+  createdAt: string
+  updatedAt: string
 }
 
-interface Event {
-  eventId: string;
-  eventType: string;
-  aggregateId: string;
-  aggregateVersion: number;
-  timestamp: string;
-  payload: any;
-  metadata: any;
+export interface Event {
+  eventId: string
+  eventType: string
+  aggregateId: string
+  version: number
+  timestamp: string
+  payload: any
+  metadata: any
 }
 
-interface Metrics {
-  commandLatency: number;
-  eventLatency: number;
-  queryLatency: number;
-  totalEvents: number;
-  successRate: number;
+export interface Metrics {
+  totalOrders: number
+  totalEvents: number
+  avgLatency: number
+  successRate: number
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState(0);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [activeTab, setActiveTab] = useState('cqrs')
+  const [orders, setOrders] = useState<Order[]>([])
+  const [events, setEvents] = useState<Event[]>([])
   const [metrics, setMetrics] = useState<Metrics>({
-    commandLatency: 0,
-    eventLatency: 0,
-    queryLatency: 0,
+    totalOrders: 0,
     totalEvents: 0,
+    avgLatency: 0,
     successRate: 100,
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [connected, setConnected] = useState(false);
-  const [placeOrderDialog, setPlaceOrderDialog] = useState(false);
-  const [temporalTime, setTemporalTime] = useState(Date.now());
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  })
+  const [autoRefresh, setAutoRefresh] = useState(true)
 
-  // WebSocket connection
-  useEffect(() => {
-    const websocket = new WebSocket(WS_URL);
-
-    websocket.onopen = () => {
-      console.log('WebSocket connected');
-      setConnected(true);
-    };
-
-    websocket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('WebSocket message:', data);
-
-      if (data.type === 'ORDER_UPDATED') {
-        // Refresh orders
-        fetchOrders();
-      }
-    };
-
-    websocket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setConnected(false);
-    };
-
-    websocket.onclose = () => {
-      console.log('WebSocket disconnected');
-      setConnected(false);
-    };
-
-    setWs(websocket);
-
-    return () => {
-      websocket.close();
-    };
-  }, []);
-
-  // Fetch orders
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`${API_URL}/queries`);
-      const data = await response.json();
-      setOrders(data.orders || []);
-    } catch (err) {
-      console.error('Error fetching orders:', err);
+      const response = await fetch(`${API_URL}/queries`)
+      const data = await response.json()
+      setOrders(data.items || [])
+      setMetrics(prev => ({ ...prev, totalOrders: data.total || 0 }))
+    } catch (error) {
+      console.error('Error fetching orders:', error)
     }
-  };
+  }
 
-  // Fetch events
   const fetchEvents = async () => {
     try {
-      const response = await fetch(`${API_URL}/events`);
-      const data = await response.json();
-      setEvents(data.events || []);
-      setMetrics((prev) => ({ ...prev, totalEvents: data.events?.length || 0 }));
-    } catch (err) {
-      console.error('Error fetching events:', err);
+      const response = await fetch(`${API_URL}/events`)
+      const data = await response.json()
+      setEvents(data.items || [])
+      setMetrics(prev => ({ ...prev, totalEvents: data.total || 0 }))
+    } catch (error) {
+      console.error('Error fetching events:', error)
     }
-  };
+  }
 
-  // Initial load
-  useEffect(() => {
-    fetchOrders();
-    fetchEvents();
-  }, []);
-
-  // Place order
   const placeOrder = async (orderData: any) => {
-    setLoading(true);
-    setError(null);
-    const startTime = Date.now();
-
+    const startTime = Date.now()
     try {
       const response = await fetch(`${API_URL}/commands`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          commandType: 'PlaceOrder',
-          ...orderData,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to place order');
-
-      const result = await response.json();
-      const latency = Date.now() - startTime;
-
-      setMetrics((prev) => ({ ...prev, commandLatency: latency }));
-      setSuccess(`Order placed successfully! (${latency}ms)`);
-      setPlaceOrderDialog(false);
-
-      // Refresh data
-      setTimeout(() => {
-        fetchOrders();
-        fetchEvents();
-      }, 500);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+        body: JSON.stringify({ commandType: 'OrderPlaced', ...orderData }),
+      })
+      const data = await response.json()
+      const latency = Date.now() - startTime
+      setMetrics(prev => ({
+        ...prev,
+        avgLatency: prev.avgLatency === 0 ? latency : (prev.avgLatency + latency) / 2,
+      }))
+      setTimeout(() => { fetchOrders(); fetchEvents() }, 500)
+      return { success: true, data, latency }
+    } catch (error) {
+      return { success: false, error }
     }
-  };
+  }
 
-  // Cancel order
   const cancelOrder = async (orderId: string) => {
-    setLoading(true);
-    setError(null);
-
     try {
-      const response = await fetch(`${API_URL}/commands`, {
+      await fetch(`${API_URL}/commands`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          commandType: 'CancelOrder',
-          orderId,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to cancel order');
-
-      setSuccess('Order cancelled successfully!');
-
-      // Refresh data
-      setTimeout(() => {
-        fetchOrders();
-        fetchEvents();
-      }, 500);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+        body: JSON.stringify({ commandType: 'OrderCancelled', aggregateId: orderId }),
+      })
+      setTimeout(() => { fetchOrders(); fetchEvents() }, 500)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error }
     }
-  };
+  }
 
-  // Temporal query
-  const fetchTemporalState = async (orderId: string, timestamp: number) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/temporal/${orderId}?asOf=${new Date(timestamp).toISOString()}`
-      );
-      const data = await response.json();
-      return data;
-    } catch (err) {
-      console.error('Error fetching temporal state:', err);
-      return null;
+  useEffect(() => {
+    fetchOrders()
+    fetchEvents()
+    if (autoRefresh) {
+      const interval = setInterval(() => { fetchOrders(); fetchEvents() }, 3000)
+      return () => clearInterval(interval)
     }
-  };
+  }, [autoRefresh])
 
-  // Simulate load
-  const simulateLoad = async () => {
-    setLoading(true);
-    setSuccess('Simulating 100 orders...');
+  const tabs = [
+    { id: 'cqrs', label: 'CQRS Demo', icon: Layers, color: '#ec4899' },
+    { id: 'dashboard', label: 'Orders', icon: Activity, color: '#3b82f6' },
+    { id: 'events', label: 'Event Stream', icon: GitBranch, color: '#a855f7' },
+    { id: 'performance', label: 'Metrics', icon: BarChart3, color: '#22c55e' },
+    { id: 'loadtest', label: 'Load Test', icon: Zap, color: '#f97316' },
+    { id: 'architecture', label: 'Architecture', icon: Database, color: '#6366f1' },
+  ]
 
-    const promises = [];
-    for (let i = 0; i < 100; i++) {
-      promises.push(
-        placeOrder({
-          orderId: `load-test-${Date.now()}-${i}`,
-          customerId: `customer-${i}`,
-          totalAmount: Math.random() * 1000,
-          items: [
-            {
-              productId: `product-${i % 10}`,
-              quantity: Math.floor(Math.random() * 5) + 1,
-              price: Math.random() * 100,
-            },
-          ],
-        })
-      );
-    }
-
-    await Promise.all(promises);
-    setSuccess('Load test complete! 100 orders processed.');
-    setLoading(false);
-  };
+  const stats = [
+    { label: 'Total Orders', value: metrics.totalOrders, icon: Activity, color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)' },
+    { label: 'Event Stream', value: metrics.totalEvents, icon: GitBranch, color: '#a855f7', gradient: 'linear-gradient(135deg, #a855f7, #ec4899)' },
+    { label: 'Avg Latency', value: `${metrics.avgLatency.toFixed(0)}ms`, icon: Zap, color: '#22c55e', gradient: 'linear-gradient(135deg, #22c55e, #10b981)' },
+    { label: 'Success Rate', value: `${metrics.successRate}%`, icon: Shield, color: '#f97316', gradient: 'linear-gradient(135deg, #f97316, #eab308)' },
+  ]
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
-      <Container maxWidth="xl">
-        {/* Header */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-          <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold', mb: 1 }}>
-            Nexus Blueprint 3.0 Demo
-          </Typography>
-          <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-            Real-Time Event-Sourced Order Management
-          </Typography>
-          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-            <Chip
-              label={connected ? 'WebSocket Connected' : 'WebSocket Disconnected'}
-              color={connected ? 'success' : 'error'}
-              size="small"
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f2d 100%)',
+      color: 'white',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    }}>
+      {/* Background Effects */}
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)', top: '-200px', right: '-200px' }} />
+        <div style={{ position: 'absolute', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%)', bottom: '-150px', left: '-150px' }} />
+        <div style={{ position: 'absolute', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+      </div>
+
+      {/* Main Content */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
+        
+        {/* Header Card */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '24px',
+          padding: '32px',
+          marginBottom: '24px',
+        }}>
+          {/* Top Row: Logo + Controls */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '24px', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{
+                width: '72px', height: '72px', borderRadius: '20px',
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 40px rgba(139, 92, 246, 0.4)',
+                position: 'relative',
+              }}>
+                <Database size={36} color="white" />
+                <div style={{
+                  position: 'absolute', top: '-8px', right: '-8px',
+                  width: '28px', height: '28px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #fbbf24, #f97316)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Sparkles size={14} color="white" />
+                </div>
+              </div>
+              <div>
+                <h1 style={{
+                  fontSize: '2.25rem', fontWeight: 900, marginBottom: '6px',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>Nexus Blueprint 3.0</h1>
+                <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 500 }}>
+                  Event-Sourced CQRS Microservice Architecture
+                </p>
+                <div style={{ display: 'flex', gap: '16px', marginTop: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.45)' }}>
+                    <Shield size={14} /> Governance-First
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.45)' }}>
+                    <Cpu size={14} /> Serverless
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.45)' }}>
+                    <Globe size={14} /> Real-time
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 18px', borderRadius: '12px',
+                background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.25)',
+                color: '#22c55e', fontWeight: 600, fontSize: '0.9rem',
+              }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                LIVE
+              </div>
+              <button
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                style={{
+                  padding: '12px 24px', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem',
+                  border: 'none', cursor: 'pointer', transition: 'all 0.3s',
+                  background: autoRefresh ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,0.08)',
+                  color: 'white', boxShadow: autoRefresh ? '0 4px 20px rgba(34, 197, 94, 0.3)' : 'none',
+                }}
+              >
+                {autoRefresh ? '🔄 Auto-Refresh' : '⏸️ Paused'}
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            {stats.map((stat) => {
+              const Icon = stat.icon
+              return (
+                <div key={stat.label} style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  borderRadius: '16px', padding: '20px',
+                  transition: 'all 0.3s', cursor: 'default',
+                }}>
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '12px',
+                    background: stat.gradient,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    marginBottom: '14px', boxShadow: `0 4px 20px ${stat.color}30`,
+                  }}>
+                    <Icon size={24} color="white" />
+                  </div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'white', marginBottom: '4px' }}>{stat.value}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 500 }}>{stat.label}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '16px', padding: '8px', marginBottom: '24px',
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, gap: '8px' }}>
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    padding: '14px 20px', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem',
+                    border: 'none', cursor: 'pointer', transition: 'all 0.3s',
+                    background: isActive ? tab.color : 'transparent',
+                    color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
+                    boxShadow: isActive ? `0 4px 20px ${tab.color}40` : 'none',
+                  }}
+                >
+                  <Icon size={18} />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div>
+          {activeTab === 'cqrs' && (
+            <CQRSDemo
+              onPlaceOrder={placeOrder}
+              onCancelOrder={cancelOrder}
+              orders={orders}
+              events={events}
+              onRefresh={() => { fetchOrders(); fetchEvents() }}
             />
-            <Chip label={`${orders.length} Orders`} color="primary" size="small" />
-            <Chip label={`${events.length} Events`} color="secondary" size="small" />
-          </Box>
-        </Paper>
+          )}
+          {activeTab === 'dashboard' && (
+            <OrderDashboard
+              orders={orders}
+              onPlaceOrder={placeOrder}
+              onCancelOrder={cancelOrder}
+              onRefresh={() => { fetchOrders(); fetchEvents() }}
+            />
+          )}
+          {activeTab === 'events' && <EventTimeline events={events} onRefresh={fetchEvents} />}
+          {activeTab === 'performance' && <PerformanceMetrics metrics={metrics} events={events} />}
+          {activeTab === 'loadtest' && <LoadTester onTest={placeOrder} onComplete={() => { fetchOrders(); fetchEvents() }} />}
+          {activeTab === 'architecture' && <ArchitectureDiagram />}
+        </div>
 
-        {/* Alerts */}
-        {error && (
-          <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        {success && (
-          <Alert severity="success" onClose={() => setSuccess(null)} sx={{ mb: 2 }}>
-            {success}
-          </Alert>
-        )}
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: '40px', paddingBottom: '24px' }}>
+          <div style={{
+            display: 'inline-block',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            borderRadius: '12px', padding: '14px 28px',
+          }}>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500, fontSize: '0.9rem' }}>
+              🚀 Nexus Blueprint 3.0 — Next-Generation Event Architecture
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem', marginTop: '4px' }}>
+              AWS Lambda • DynamoDB • API Gateway • EventBridge • React
+            </p>
+          </div>
+        </div>
+      </div>
 
-        {/* Tabs */}
-        <Paper elevation={2} sx={{ mb: 3 }}>
-          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="fullWidth">
-            <Tab icon={<ShoppingCart />} label="Orders" />
-            <Tab icon={<Timeline />} label="Event Timeline" />
-            <Tab icon={<History />} label="Time Travel" />
-            <Tab icon={<Speed />} label="Performance" />
-            <Tab icon={<Architecture />} label="Architecture" />
-          </Tabs>
-        </Paper>
-
-        {/* Tab Content */}
-        {activeTab === 0 && (
-          <Grid container spacing={3}>
-            {/* Actions */}
-            <Grid item xs={12}>
-              <Paper sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Button
-                    variant="contained"
-                    startIcon={<ShoppingCart />}
-                    onClick={() => setPlaceOrderDialog(true)}
-                    disabled={loading}
-                  >
-                    Place Order
-                  </Button>
-                  <Button variant="outlined" onClick={fetchOrders} disabled={loading}>
-                    Refresh
-                  </Button>
-                  <Button variant="outlined" color="warning" onClick={simulateLoad} disabled={loading}>
-                    Simulate Load (100 orders)
-                  </Button>
-                </Box>
-              </Paper>
-            </Grid>
-
-            {/* Orders List */}
-            {orders.map((order) => (
-              <Grid item xs={12} md={6} lg={4} key={order.orderId}>
-                <Card>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography variant="h6">Order #{order.orderId.slice(0, 8)}</Typography>
-                      <Chip
-                        label={order.status}
-                        color={
-                          order.status === 'PLACED'
-                            ? 'success'
-                            : order.status === 'CANCELLED'
-                            ? 'error'
-                            : 'default'
-                        }
-                        size="small"
-                      />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Customer: {order.customerId}
-                    </Typography>
-                    <Typography variant="h5" sx={{ mt: 1 }}>
-                      ${order.totalAmount.toFixed(2)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {order.items.length} items • v{order.version}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small" onClick={() => setSelectedOrder(order)}>
-                      Details
-                    </Button>
-                    {order.status === 'PLACED' && (
-                      <Button size="small" color="error" onClick={() => cancelOrder(order.orderId)}>
-                        Cancel
-                      </Button>
-                    )}
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-
-        {activeTab === 1 && (
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Event Timeline
-            </Typography>
-            <List>
-              {events.map((event, index) => (
-                <React.Fragment key={event.eventId}>
-                  <ListItem>
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {event.eventType === 'OrderPlaced' && <CheckCircle color="success" />}
-                          {event.eventType === 'OrderCancelled' && <Cancel color="error" />}
-                          <Typography variant="subtitle1">{event.eventType}</Typography>
-                          <Chip label={`v${event.aggregateVersion}`} size="small" />
-                        </Box>
-                      }
-                      secondary={
-                        <>
-                          <Typography variant="body2">
-                            Aggregate: {event.aggregateId.slice(0, 12)}...
-                          </Typography>
-                          <Typography variant="caption">
-                            {new Date(event.timestamp).toLocaleString()}
-                          </Typography>
-                        </>
-                      }
-                    />
-                  </ListItem>
-                  {index < events.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
-          </Paper>
-        )}
-
-        {activeTab === 2 && (
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Time Travel - Temporal Queries
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Use the slider to travel back in time and see historical state
-            </Typography>
-            <Box sx={{ px: 2, py: 3 }}>
-              <Typography gutterBottom>
-                Selected Time: {new Date(temporalTime).toLocaleString()}
-              </Typography>
-              <Slider
-                value={temporalTime}
-                onChange={(_, v) => setTemporalTime(v as number)}
-                min={Date.now() - 24 * 60 * 60 * 1000}
-                max={Date.now()}
-                step={60000}
-              />
-            </Box>
-            <Alert severity="info">
-              Select an order and use the slider to see its state at different points in time
-            </Alert>
-          </Paper>
-        )}
-
-        {activeTab === 3 && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Command Latency
-                  </Typography>
-                  <Typography variant="h3" color="primary">
-                    {metrics.commandLatency}ms
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.min((metrics.commandLatency / 200) * 100, 100)}
-                    sx={{ mt: 2 }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Target: &lt; 200ms
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Total Events
-                  </Typography>
-                  <Typography variant="h3" color="secondary">
-                    {metrics.totalEvents}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-                    Complete audit trail
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Success Rate
-                  </Typography>
-                  <Typography variant="h3" color="success.main">
-                    {metrics.successRate}%
-                  </Typography>
-                  <LinearProgress variant="determinate" value={metrics.successRate} sx={{ mt: 2 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        )}
-
-        {activeTab === 4 && (
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Architecture Overview
-            </Typography>
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <img
-                src="/architecture-diagram.svg"
-                alt="Architecture"
-                style={{ maxWidth: '100%', height: 'auto' }}
-              />
-            </Box>
-            <Grid container spacing={2} sx={{ mt: 2 }}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>
-                  Key Benefits
-                </Typography>
-                <List dense>
-                  <ListItem>✅ Complete audit trail via Event Sourcing</ListItem>
-                  <ListItem>✅ Optimized read models via CQRS</ListItem>
-                  <ListItem>✅ Real-time updates via WebSocket</ListItem>
-                  <ListItem>✅ Schema validation on all events</ListItem>
-                  <ListItem>✅ Temporal queries for compliance</ListItem>
-                  <ListItem>✅ Sub-second performance</ListItem>
-                </List>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>
-                  AWS Free Tier
-                </Typography>
-                <List dense>
-                  <ListItem>💰 Lambda: 1M requests/month</ListItem>
-                  <ListItem>💰 DynamoDB: 25GB storage</ListItem>
-                  <ListItem>💰 API Gateway: 1M requests/month</ListItem>
-                  <ListItem>💰 S3: 5GB storage</ListItem>
-                  <ListItem>💰 Estimated cost: $0/month</ListItem>
-                </List>
-              </Grid>
-            </Grid>
-          </Paper>
-        )}
-
-        {/* Place Order Dialog */}
-        <PlaceOrderDialog
-          open={placeOrderDialog}
-          onClose={() => setPlaceOrderDialog(false)}
-          onSubmit={placeOrder}
-        />
-      </Container>
-    </Box>
-  );
+      <style>{`
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { margin: 0; }
+        @media (max-width: 900px) {
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 600px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </div>
+  )
 }
 
-// Place Order Dialog Component
-function PlaceOrderDialog({ open, onClose, onSubmit }: any) {
-  const [formData, setFormData] = useState({
-    orderId: `order-${Date.now()}`,
-    customerId: 'customer-demo',
-    totalAmount: 99.99,
-    items: [{ productId: 'product-1', quantity: 2, price: 49.99 }],
-  });
-
-  const handleSubmit = () => {
-    onSubmit(formData);
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Place New Order</DialogTitle>
-      <DialogContent>
-        <TextField
-          fullWidth
-          label="Order ID"
-          value={formData.orderId}
-          onChange={(e) => setFormData({ ...formData, orderId: e.target.value })}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="Customer ID"
-          value={formData.customerId}
-          onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-          margin="normal"
-        />
-        <TextField
-          fullWidth
-          label="Total Amount"
-          type="number"
-          value={formData.totalAmount}
-          onChange={(e) => setFormData({ ...formData, totalAmount: parseFloat(e.target.value) })}
-          margin="normal"
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained">
-          Place Order
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
-
-export default App;
+export default App
