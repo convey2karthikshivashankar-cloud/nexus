@@ -1,6 +1,6 @@
-// Updated: Force rebuild v3 - Fixed Orders and Events tabs
+// Nexus Orders Demo - CQRS + Event Sourcing for E-Commerce
 import { useState, useEffect } from 'react'
-import { Activity, Zap, Database, GitBranch, BarChart3, Sparkles, Shield, Cpu, Globe, Layers } from 'lucide-react'
+import { Activity, Zap, Database, GitBranch, BarChart3, Sparkles, Shield, Cpu, Globe, Layers, ShoppingCart, DollarSign } from 'lucide-react'
 import OrderDashboard from './components/OrderDashboard'
 import EventTimeline from './components/EventTimeline'
 import PerformanceMetrics from './components/PerformanceMetrics'
@@ -35,6 +35,8 @@ export interface Metrics {
   totalEvents: number
   avgLatency: number
   successRate: number
+  totalValue: number
+  cancelledOrders: number
 }
 
 function App() {
@@ -46,6 +48,8 @@ function App() {
     totalEvents: 0,
     avgLatency: 0,
     successRate: 100,
+    totalValue: 0,
+    cancelledOrders: 0,
   })
   const [autoRefresh, setAutoRefresh] = useState(true)
 
@@ -53,8 +57,20 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/queries`)
       const data = await response.json()
-      setOrders(data.items || [])
-      setMetrics(prev => ({ ...prev, totalOrders: data.total || 0 }))
+      const orderList = data.items || []
+      setOrders(orderList)
+      
+      // Calculate metrics from orders
+      const placedOrders = orderList.filter((o: Order) => o.status === 'PLACED')
+      const cancelledOrders = orderList.filter((o: Order) => o.status === 'CANCELLED')
+      const totalValue = placedOrders.reduce((sum: number, o: Order) => sum + (o.totalAmount || 0), 0)
+      
+      setMetrics(prev => ({ 
+        ...prev, 
+        totalOrders: placedOrders.length,
+        cancelledOrders: cancelledOrders.length,
+        totalValue: totalValue,
+      }))
     } catch (error) {
       console.error('Error fetching orders:', error)
     }
@@ -125,10 +141,10 @@ function App() {
   ]
 
   const stats = [
-    { label: 'Total Orders', value: metrics.totalOrders, icon: Activity, color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)' },
+    { label: 'Active Orders', value: metrics.totalOrders, icon: ShoppingCart, color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)' },
+    { label: 'Total Value', value: `$${metrics.totalValue.toFixed(2)}`, icon: DollarSign, color: '#22c55e', gradient: 'linear-gradient(135deg, #22c55e, #10b981)' },
     { label: 'Event Stream', value: metrics.totalEvents, icon: GitBranch, color: '#a855f7', gradient: 'linear-gradient(135deg, #a855f7, #ec4899)' },
-    { label: 'Avg Latency', value: `${metrics.avgLatency.toFixed(0)}ms`, icon: Zap, color: '#22c55e', gradient: 'linear-gradient(135deg, #22c55e, #10b981)' },
-    { label: 'Success Rate', value: `${metrics.successRate}%`, icon: Shield, color: '#f97316', gradient: 'linear-gradient(135deg, #f97316, #eab308)' },
+    { label: 'Avg Latency', value: `${metrics.avgLatency.toFixed(0)}ms`, icon: Zap, color: '#f97316', gradient: 'linear-gradient(135deg, #f97316, #eab308)' },
   ]
 
   return (
@@ -182,9 +198,9 @@ function App() {
                   fontSize: '2.25rem', fontWeight: 900, marginBottom: '6px',
                   background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>Nexus Blueprint 3.0</h1>
+                }}>Nexus Orders Demo</h1>
                 <p style={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 500 }}>
-                  Event-Sourced CQRS Microservice Architecture
+                  Event-Sourced CQRS for E-Commerce Orders
                 </p>
                 <div style={{ display: 'flex', gap: '16px', marginTop: '10px', flexWrap: 'wrap' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.45)' }}>
@@ -316,7 +332,7 @@ function App() {
             borderRadius: '12px', padding: '14px 28px',
           }}>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500, fontSize: '0.9rem' }}>
-              🚀 Nexus Blueprint 3.0 — Next-Generation Event Architecture
+              🛒 Nexus Orders Demo — CQRS + Event Sourcing for E-Commerce
             </p>
             <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem', marginTop: '4px' }}>
               AWS Lambda • DynamoDB • API Gateway • EventBridge • React

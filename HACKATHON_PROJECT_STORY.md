@@ -293,6 +293,62 @@ We built a **VC-pitch-ready demo** that showcases the platform in action:
 - **Automated performance benchmarking** running actual load tests
 - **Cost comparison dashboards** showing the 73% savings in real-time
 
+### 🦴 Skeleton Crew: Two Apps, One Skeleton
+
+The hackathon theme challenged us to build a **skeleton code template lean enough to be clear but flexible enough to support various use cases**. We took this literally by building **two completely distinct applications** from the same core skeleton:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          NEXUS BLUEPRINT SKELETON                               │
+│                     (packages/shared - Generic CQRS Core)                       │
+│                                                                                 │
+│  ┌───────────────────────────────────┐    ┌───────────────────────────────────┐│
+│  │     APP #1: NEXUS ORDERS DEMO     │    │    APP #2: NEXUS IoT DEMO         ││
+│  │           📦 demo/                │    │          🌡️ demo-iot/             ││
+│  │                                   │    │                                   ││
+│  │  Commands:                        │    │  Commands:                        ││
+│  │  • PlaceOrder                     │    │  • RegisterSensor                 ││
+│  │  • CancelOrder                    │    │  • RecordReading                  ││
+│  │                                   │    │  • TriggerAlert                   ││
+│  │  Events:                          │    │                                   ││
+│  │  • OrderPlaced                    │    │  Events:                          ││
+│  │  • OrderCancelled                 │    │  • SensorRegistered               ││
+│  │                                   │    │  • ReadingRecorded                ││
+│  │  UI: Blue/Purple theme            │    │  • AlertTriggered                 ││
+│  │  Use Case: E-commerce orders      │    │                                   ││
+│  │                                   │    │  UI: Cyan/Green theme             ││
+│  │                                   │    │  Use Case: Industrial IoT         ││
+│  └───────────────────────────────────┘    └───────────────────────────────────┘│
+│                                                                                 │
+│                    Shared: CQRS Patterns, Event Sourcing, AWS CDK               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why Two Apps Proves the Skeleton Works:**
+
+| Aspect | Nexus Orders Demo | Nexus IoT Demo |
+|--------|-------------------|----------------|
+| **Domain** | Retail/E-commerce | Industrial IoT |
+| **Entities** | Orders, Customers | Sensors, Readings, Alerts |
+| **Commands** | PlaceOrder, CancelOrder | RegisterSensor, RecordReading |
+| **Events** | OrderPlaced, OrderCancelled | SensorRegistered, ReadingRecorded |
+| **Read Models** | Order list, chronology | Sensor registry, alert dashboard |
+| **UI Theme** | Blue/Purple gradient | Cyan/Green gradient |
+
+Both applications:
+- Share the **exact same CQRS skeleton** from `packages/shared/`
+- Use **identical infrastructure patterns** (Lambda, DynamoDB, EventBridge)
+- Deploy with the **same CDK constructs**
+- Feature **matching UI components** (CQRS Demo, Dashboard, Event Timeline, Load Tester)
+
+The skeleton contains **zero domain-specific code**—no "Order", "Sensor", or "Product" in the shared packages. This proves the architecture is truly generic and can power any event-sourced application.
+
+**Live Demos:**
+- 📦 **Nexus Orders Demo**: E-commerce order management with real-time CQRS visualization
+- 🌡️ **Nexus IoT Demo**: Sensor monitoring with temperature readings and alert management
+
+Both deployed to AWS with full functionality, demonstrating that the skeleton isn't just theoretical—it's production-ready and versatile.
+
 ## What we learned
 
 ### 1. Governance is a Feature, Not a Constraint

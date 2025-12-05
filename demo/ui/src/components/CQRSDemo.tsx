@@ -32,6 +32,7 @@ export default function CQRSDemo({ onPlaceOrder, onCancelOrder, orders, events, 
   const [lastCommandLatency, setLastCommandLatency] = useState<number | null>(null)
   const [lastQueryLatency, setLastQueryLatency] = useState<number | null>(null)
   const [showEventFlow, setShowEventFlow] = useState(false)
+  const [queryFlash, setQueryFlash] = useState(false)
 
   // Demo order data
   const [customerId] = useState(`customer-${Math.random().toString(36).substr(2, 6)}`)
@@ -92,6 +93,7 @@ export default function CQRSDemo({ onPlaceOrder, onCancelOrder, orders, events, 
 
   const executeQuery = async () => {
     setIsQueryRunning(true)
+    setQueryFlash(true)
     
     const queryId = `qry-${Date.now()}`
     addLog('query', {
@@ -103,7 +105,9 @@ export default function CQRSDemo({ onPlaceOrder, onCancelOrder, orders, events, 
     })
 
     const startTime = Date.now()
-    await onRefresh()
+    onRefresh()
+    // Small delay to simulate network
+    await new Promise(resolve => setTimeout(resolve, 200))
     const latency = Date.now() - startTime
     setLastQueryLatency(latency)
 
@@ -114,6 +118,7 @@ export default function CQRSDemo({ onPlaceOrder, onCancelOrder, orders, events, 
     ))
 
     setIsQueryRunning(false)
+    setTimeout(() => setQueryFlash(false), 500)
   }
 
   return (
@@ -360,12 +365,34 @@ export default function CQRSDemo({ onPlaceOrder, onCancelOrder, orders, events, 
               </div>
             </div>
 
-            {/* Query Results Preview */}
+            {/* Query Activity Log */}
             <div style={{ marginTop: '24px' }}>
               <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase' }}>
-                Query Results ({orders.length} orders)
+                Query Activity Log
               </div>
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div style={{ maxHeight: '100px', overflowY: 'auto', marginBottom: '16px' }}>
+                {queryLogs.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '16px', color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>
+                    Execute a query to see activity
+                  </div>
+                ) : (
+                  queryLogs.map(log => <LogEntry key={log.id} log={log} />)
+                )}
+              </div>
+            </div>
+
+            {/* Query Results Preview */}
+            <div style={{ 
+              marginTop: '16px',
+              transition: 'all 0.3s',
+              background: queryFlash ? 'rgba(34, 197, 94, 0.15)' : 'transparent',
+              borderRadius: '12px',
+              padding: queryFlash ? '8px' : '0',
+            }}>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase' }}>
+                Query Results ({orders.length} orders) {queryFlash && <span style={{ color: '#22c55e' }}>✓ Updated!</span>}
+              </div>
+              <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
                 {orders.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px', color: 'rgba(255,255,255,0.3)' }}>
                     No orders in read model yet
@@ -383,7 +410,7 @@ export default function CQRSDemo({ onPlaceOrder, onCancelOrder, orders, events, 
                           {order.orderId.substring(0, 16)}...
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
-                          {order.customerId}
+                          {order.customerId} • ${order.totalAmount?.toFixed(2) || '0.00'}
                         </div>
                       </div>
                       <div style={{

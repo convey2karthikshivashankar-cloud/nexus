@@ -1,0 +1,26 @@
+{
+  "name": "nexus-iot-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc && npm run build:lambdas",
+    "build:lambdas": "node scripts/build-lambdas.js",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy --force",
+    "synth": "cdk synth"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/lib-dynamodb": "^3.450.0",
+    "aws-cdk-lib": "^2.110.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.125",
+    "@types/node": "^20.9.0",
+    "aws-cdk": "^2.110.0",
+    "esbuild": "^0.19.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.0"
+  }
+}

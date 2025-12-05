@@ -2,6 +2,21 @@
 
 **Status**: 🎉 Production-Ready | **Completion**: 100% | **All 18 Tasks Complete**
 
+## 🦴 Skeleton Crew Hackathon Entry
+
+> **Theme**: Build a skeleton code template lean enough to be clear but flexible enough to support various use cases.
+
+This repository demonstrates the Skeleton Crew theme with **two distinct applications** built from the same foundation:
+
+| Application | Directory | Purpose |
+|-------------|-----------|---------|
+| 🔵 **Command Service** | [`app-command-service/`](./app-command-service/) | Write operations (PlaceOrder, CancelOrder) |
+| 🟢 **Query Service** | [`app-query-service/`](./app-query-service/) | Read operations (GetOrders, GetEvents) |
+
+👉 **[See SKELETON_CREW.md for full details](./SKELETON_CREW.md)**
+
+---
+
 A production-ready, **vendor-neutral** Event-Sourced microservice foundation implementing CQRS patterns with **governance-first architecture**. Uses **Ports & Adapters (Hexagonal Architecture)** for cloud portability while defaulting to AWS for rapid prototyping.
 
 > **The system is "born governed"** - All architectural constraints enforced through automated CI/CD pipelines with schema validation and policy enforcement from day one.
@@ -34,17 +49,33 @@ See [MULTI_CLOUD_ARCHITECTURE.md](MULTI_CLOUD_ARCHITECTURE.md) for details.
 
 ```
 nexus-blueprint-3.0/
-├── packages/
-│   ├── shared/              # Shared types and interfaces
-│   ├── command-service/     # Write model implementation
-│   ├── query-dashboard/     # Read model implementation
-│   └── infrastructure/      # AWS CDK infrastructure code
+├── app-command-service/     # 🔵 Skeleton Crew App #1 - Command Service
+│   ├── bin/                 # CDK entry point
+│   ├── infrastructure/      # CDK stack
+│   ├── lambda/              # Lambda handlers
+│   └── ui/                  # React UI
+│
+├── app-query-service/       # 🟢 Skeleton Crew App #2 - Query Service
+│   ├── bin/                 # CDK entry point
+│   ├── infrastructure/      # CDK stack
+│   ├── lambda/              # Lambda handlers
+│   └── ui/                  # React UI
+│
+├── packages/                # Shared skeleton components
+│   ├── shared/              # Core interfaces & ports
+│   ├── adapters/            # AWS & open-source adapters
+│   ├── command-service/     # Command patterns
+│   ├── query-dashboard/     # Query patterns
+│   └── infrastructure/      # CDK constructs
+│
 ├── .kiro/
 │   └── specs/
 │       └── nexus-blueprint-3.0/
 │           ├── requirements.md
 │           ├── design.md
 │           └── tasks.md
+│
+├── SKELETON_CREW.md         # Hackathon theme documentation
 └── README.md
 ```
 
@@ -56,7 +87,21 @@ nexus-blueprint-3.0/
 - AWS CLI configured with appropriate credentials
 - AWS CDK CLI (`npm install -g aws-cdk`)
 
-### Installation
+### Quick Start - Skeleton Crew Apps
+
+```bash
+# Deploy Command Service (App #1)
+cd app-command-service
+npm install
+npx cdk deploy
+
+# Deploy Query Service (App #2)
+cd ../app-query-service
+npm install
+npx cdk deploy
+```
+
+### Installation (Full Framework)
 
 ```bash
 # Install dependencies
@@ -66,7 +111,7 @@ npm install
 npm run build
 ```
 
-### Deployment
+### Deployment (Full Framework)
 
 ```bash
 # Deploy infrastructure
@@ -120,10 +165,16 @@ CLOUD_PROVIDER=gcp npm run deploy
 
 ## Documentation
 
+### Skeleton Crew (Hackathon)
+- [Skeleton Crew Overview](SKELETON_CREW.md) ⭐ **HACKATHON**
+- [Command Service](app-command-service/README.md)
+- [Query Service](app-query-service/README.md)
+
+### Architecture
 - [Requirements](.kiro/specs/nexus-blueprint-3.0/requirements.md)
 - [Design](.kiro/specs/nexus-blueprint-3.0/design.md)
 - [Implementation Tasks](.kiro/specs/nexus-blueprint-3.0/tasks.md)
-- [Multi-Cloud Architecture](MULTI_CLOUD_ARCHITECTURE.md) ⭐ **NEW**
+- [Multi-Cloud Architecture](MULTI_CLOUD_ARCHITECTURE.md)
 - [Architect Feedback Implementation](ARCHITECT_FEEDBACK_IMPLEMENTATION.md)
 - [Implementation Status](IMPLEMENTATION_STATUS.md)
 

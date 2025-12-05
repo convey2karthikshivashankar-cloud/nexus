@@ -1,0 +1,33 @@
+{
+  "name": "nexus-query-service",
+  "version": "1.0.0",
+  "description": "Skeleton Crew App #2 - Standalone Query Service for CQRS",
+  "main": "bin/app.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy",
+    "synth": "cdk synth"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "aws-cdk": "^2.100.0",
+    "esbuild": "^0.19.0"
+  },
+  "keywords": [
+    "cqrs",
+    "event-sourcing",
+    "query-service",
+    "nexus-blueprint",
+    "skeleton-crew"
+  ],
+  "author": "Nexus Blueprint Team",
+  "license": "MIT"
+}
