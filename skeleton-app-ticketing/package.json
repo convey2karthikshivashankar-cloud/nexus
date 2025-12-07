@@ -1,0 +1,24 @@
+{
+  "name": "skeleton-app-ticketing",
+  "version": "1.0.0",
+  "description": "Support Ticketing App - Built on Nexus Skeleton",
+  "scripts": {
+    "build": "tsc && node scripts/build-lambdas.js",
+    "deploy": "cdk deploy --require-approval never"
+  },
+  "dependencies": {
+    "@nexus/shared": "file:../packages/shared",
+    "@aws-sdk/client-dynamodb": "^3.400.0",
+    "@aws-sdk/lib-dynamodb": "^3.400.0",
+    "@aws-sdk/client-eventbridge": "^3.400.0",
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0",
+    "typescript": "^5.0.0",
+    "esbuild": "^0.19.0"
+  }
+}
