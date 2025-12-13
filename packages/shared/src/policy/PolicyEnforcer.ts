@@ -179,8 +179,27 @@ export class PolicyEnforcer {
 }
 
 /**
- * Global policy enforcer instance
+ * Create a PolicyEnforcer instance with configuration from environment
+ * @deprecated Use `new PolicyEnforcer(config)` instead for better testability
+ */
+export function createPolicyEnforcer(enableLogging?: boolean): PolicyEnforcer {
+  const logging = enableLogging ?? process.env.ENABLE_POLICY_LOGGING === 'true';
+  return new PolicyEnforcer(logging);
+}
+
+/**
+ * Default policy enforcer instance
+ * @deprecated Import PolicyEnforcer class and instantiate directly for better testability
+ * 
+ * @example
+ * ```typescript
+ * // Preferred: Create your own instance
+ * const enforcer = new PolicyEnforcer(false);
+ * 
+ * // Legacy: Use default instance (not recommended for testing)
+ * import { policyEnforcer } from '@nexus/shared';
+ * ```
  */
 export const policyEnforcer = new PolicyEnforcer(
-  process.env.ENABLE_POLICY_LOGGING === 'true'
+  typeof process !== 'undefined' && process.env?.ENABLE_POLICY_LOGGING === 'true'
 );

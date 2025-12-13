@@ -5,19 +5,40 @@ import { SnapshotStorePort, Snapshot } from '@nexus/shared';
 export interface DynamoDBSnapshotStoreConfig {
   tableName: string;
   region: string;
+  /** TTL for snapshots in days. Default: 90 days. Set to 0 to disable TTL. */
+  ttlDays?: number;
 }
 
 /**
  * AWS DynamoDB implementation of SnapshotStorePort
+ * 
+ * @example
+ * ```typescript
+ * const snapshotStore = new DynamoDBSnapshotStore({
+ *   tableName: 'Snapshots',
+ *   region: 'us-east-1',
+ *   ttlDays: 90,
+ * });
+ * ```
  */
 export class DynamoDBSnapshotStore implements SnapshotStorePort {
   private readonly client: DynamoDBDocumentClient;
   private readonly tableName: string;
+  private readonly ttlDays: number;
 
   constructor(config: DynamoDBSnapshotStoreConfig) {
+    // Input validation
+    if (!config.tableName || config.tableName.trim() === '') {
+      throw new Error('DynamoDBSnapshotStore: tableName is required');
+    }
+    if (!config.region || config.region.trim() === '') {
+      throw new Error('DynamoDBSnapshotStore: region is required');
+    }
+
     const dynamoClient = new DynamoDBClient({ region: config.region });
     this.client = DynamoDBDocumentClient.from(dynamoClient);
     this.tableName = config.tableName;
+    this.ttlDays = config.ttlDays ?? 90;
   }
 
   async getLatest(aggregateId: string): Promise<Snapshot | null> {
@@ -41,18 +62,32 @@ export class DynamoDBSnapshotStore implements SnapshotStorePort {
   }
 
   async save(snapshot: Snapshot): Promise<void> {
+    // Input validation
+    if (!snapshot.aggregateId || snapshot.aggregateId.trim() === '') {
+      throw new Error('DynamoDBSnapshotStore.save: aggregateId is required');
+    }
+    if (typeof snapshot.version !== 'number' || snapshot.version < 0) {
+      throw new Error('DynamoDBSnapshotStore.save: version must be a non-negative number');
+    }
+
+    const item: Record<string, unknown> = {
+      aggregateId: snapshot.aggregateId,
+      version: snapshot.version,
+      timestamp: snapshot.timestamp,
+      state: snapshot.state,
+      schemaVersion: snapshot.schemaVersion,
+      metadata: snapshot.metadata,
+    };
+
+    // Add TTL if enabled
+    if (this.ttlDays > 0) {
+      item.ttl = Math.floor(Date.now() / 1000) + (this.ttlDays * 24 * 60 * 60);
+    }
+
     await this.client.send(
       new PutCommand({
         TableName: this.tableName,
-        Item: {
-          aggregateId: snapshot.aggregateId,
-          version: snapshot.version,
-          timestamp: snapshot.timestamp,
-          state: snapshot.state,
-          schemaVersion: snapshot.schemaVersion,
-          metadata: snapshot.metadata,
-          ttl: Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60),
-        },
+        Item: item,
       })
     );
   }

@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { ShoppingCart, Plus, RefreshCw, X, CheckCircle, XCircle, User, DollarSign, Clock, Package, ArrowUpDown, Search, Calendar, TrendingUp } from 'lucide-react'
 import { Order } from '../App'
 
@@ -45,7 +45,7 @@ export default function OrderDashboard({ orders, onPlaceOrder, onCancelOrder, on
     const result = await onPlaceOrder(orderData)
     setLoading(false)
     if (result.success) {
-      setMessage({ type: 'success', text: 'Order placed successfully! Total: \$' + totalAmount.toFixed(2) + ' (Latency: ' + result.latency + 'ms)' })
+      setMessage({ type: 'success', text: `Order placed! Total: $${totalAmount.toFixed(2)} (Latency: ${result.latency}ms)` })
       setShowNewOrder(false)
       setCustomerName('John Doe')
       setProductName('Premium Widget')
@@ -76,7 +76,9 @@ export default function OrderDashboard({ orders, onPlaceOrder, onCancelOrder, on
 
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
-      const matchesSearch = searchTerm === '' || o.orderId.toLowerCase().includes(searchTerm.toLowerCase()) || (o.customerId || '').toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSearch = searchTerm === '' || 
+        o.orderId.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (o.customerId || '').toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStatus = statusFilter === 'all' || o.status === statusFilter
       return matchesSearch && matchesStatus
     }).sort((a, b) => {
@@ -103,19 +105,13 @@ export default function OrderDashboard({ orders, onPlaceOrder, onCancelOrder, on
     const cancelledOrders = orders.filter(o => o.status === 'CANCELLED')
     const totalValue = activeOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
     const avgValue = activeOrders.length > 0 ? totalValue / activeOrders.length : 0
-    return {
-      total: orders.length,
-      active: activeOrders.length,
-      cancelled: cancelledOrders.length,
-      totalValue,
-      avgValue
-    }
+    return { total: orders.length, active: activeOrders.length, cancelled: cancelledOrders.length, totalValue, avgValue }
   }, [orders])
 
   return (
     <div>
       {message && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '14px', marginBottom: '20px', background: message.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: '1px solid ' + (message.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)') }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '14px', marginBottom: '20px', background: message.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${message.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: message.type === 'success' ? '#22c55e' : '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {message.type === 'success' ? <CheckCircle size={20} color="white" /> : <XCircle size={20} color="white" />}
           </div>
@@ -148,8 +144,8 @@ export default function OrderDashboard({ orders, onPlaceOrder, onCancelOrder, on
           <StatCard icon={<Package size={18} />} label="Total Orders" value={stats.total} color="#3b82f6" />
           <StatCard icon={<CheckCircle size={18} />} label="Active" value={stats.active} color="#22c55e" />
           <StatCard icon={<XCircle size={18} />} label="Cancelled" value={stats.cancelled} color="#ef4444" />
-          <StatCard icon={<DollarSign size={18} />} label="Total Value" value={'\$' + stats.totalValue.toFixed(2)} color="#a855f7" />
-          <StatCard icon={<TrendingUp size={18} />} label="Avg Order" value={'\$' + stats.avgValue.toFixed(2)} color="#f97316" />
+          <StatCard icon={<DollarSign size={18} />} label="Total Value" value={`$${stats.totalValue.toFixed(2)}`} color="#a855f7" />
+          <StatCard icon={<TrendingUp size={18} />} label="Avg Order" value={`$${stats.avgValue.toFixed(2)}`} color="#f97316" />
         </div>
 
         {showNewOrder && (
@@ -162,13 +158,13 @@ export default function OrderDashboard({ orders, onPlaceOrder, onCancelOrder, on
               <InputField label="Customer Name" value={customerName} onChange={setCustomerName} placeholder="John Doe" />
               <InputField label="Product Name" value={productName} onChange={setProductName} placeholder="Premium Widget" />
               <InputField label="Quantity" value={quantity} onChange={(v) => setQuantity(Math.max(1, parseInt(v) || 1))} type="number" />
-              <InputField label="Unit Price (\$)" value={unitPrice} onChange={(v) => setUnitPrice(Math.max(0.01, parseFloat(v) || 0.01))} type="number" />
+              <InputField label="Unit Price ($)" value={unitPrice} onChange={(v) => setUnitPrice(Math.max(0.01, parseFloat(v) || 0.01))} type="number" />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#22c55e' }}>Total: \</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#22c55e' }}>Total: ${totalAmount.toFixed(2)}</div>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={handlePlaceOrder} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', fontWeight: 700, border: 'none', cursor: loading ? 'wait' : 'pointer', background: loading ? 'rgba(34, 197, 94, 0.3)' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }}>
-                  {loading ? 'Processing...' : 'Place Order (\$' + totalAmount.toFixed(2) + ')'}
+                  {loading ? 'Processing...' : `Place Order ($${totalAmount.toFixed(2)})`}
                 </button>
                 <button onClick={() => setShowNewOrder(false)} style={{ padding: '12px 20px', borderRadius: '12px', fontWeight: 600, border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255, 255, 255, 0.7)', cursor: 'pointer' }}>Cancel</button>
               </div>
@@ -200,37 +196,41 @@ export default function OrderDashboard({ orders, onPlaceOrder, onCancelOrder, on
           </div>
         </div>
 
-        {orders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 24px' }}>
             <div style={{ width: '80px', height: '80px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
               <ShoppingCart size={40} color="rgba(255,255,255,0.2)" />
             </div>
-            <h3 style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700, marginBottom: '8px' }}>No Orders Yet</h3>
-            <p style={{ color: 'rgba(255,255,255,0.35)' }}>Place your first order to see the magic!</p>
+            <h3 style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700, marginBottom: '8px' }}>
+              {orders.length === 0 ? 'No Orders Yet' : 'No Matching Orders'}
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.35)' }}>
+              {orders.length === 0 ? 'Place your first order to see the magic!' : 'Try adjusting your filters'}
+            </p>
           </div>
         ) : viewMode === 'chronology' ? (
           <div style={{ padding: '24px', maxHeight: '600px', overflowY: 'auto' }}>
-            {Object.entries(groupedByDate).map(([date, dateOrders]) => (
-              <div key={date} style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Calendar size={22} color="#3b82f6" />
+            {Object.entries(groupedByDate).map(([date, dateOrders]) => {
+              const dateTotal = dateOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
+              return (
+                <div key={date} style={{ marginBottom: '32px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Calendar size={22} color="#3b82f6" />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, color: 'white', fontSize: '1.05rem' }}>{date}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>{dateOrders.length} orders - Total: ${dateTotal.toFixed(2)}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 700, color: 'white', fontSize: '1.05rem' }}>{date}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>{dateOrders.length} orders - Total: \</div>
+                  <div style={{ marginLeft: '22px', borderLeft: '2px solid rgba(59, 130, 246, 0.2)', paddingLeft: '24px' }}>
+                    {dateOrders.map((order, idx) => (
+                      <OrderCard key={order.orderId} order={order} onCancel={handleCancelOrder} cancelling={cancellingId === order.orderId} isLast={idx === dateOrders.length - 1} />
+                    ))}
                   </div>
                 </div>
-                <div style={{ marginLeft: '22px', borderLeft: '2px solid rgba(59, 130, 246, 0.2)', paddingLeft: '24px' }}>
-                  {dateOrders.map((order, idx) => (
-                    <OrderCard key={order.orderId} order={order} onCancel={handleCancelOrder} cancelling={cancellingId === order.orderId} isLast={idx === dateOrders.length - 1} />
-                  ))}
-                </div>
-              </div>
-            ))}
-            {filteredOrders.length === 0 && orders.length > 0 && (
-              <div style={{ textAlign: 'center', padding: '40px' }}><p style={{ color: 'rgba(255,255,255,0.4)' }}>No orders match your filters</p></div>
-            )}
+              )
+            })}
           </div>
         ) : (
           <TableView orders={filteredOrders} toggleSort={toggleSort} sortField={sortField} onCancel={handleCancelOrder} cancellingId={cancellingId} />
@@ -240,6 +240,7 @@ export default function OrderDashboard({ orders, onPlaceOrder, onCancelOrder, on
     </div>
   )
 }
+
 
 function TableView({ orders, toggleSort, sortField, onCancel, cancellingId }: { orders: Order[]; toggleSort: (f: SortField) => void; sortField: SortField; onCancel: (id: string) => void; cancellingId: string | null }) {
   return (
@@ -264,7 +265,15 @@ function TableView({ orders, toggleSort, sortField, onCancel, cancellingId }: { 
             <div style={{ width: '80px', display: 'flex', alignItems: 'center', gap: '4px' }}><Package size={14} color="#a855f7" /><span style={{ color: 'rgba(255,255,255,0.7)' }}>{order.items?.length || 0}</span></div>
             <div style={{ flex: 1 }}><span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, background: order.status === 'PLACED' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: order.status === 'PLACED' ? '#22c55e' : '#ef4444' }}>{order.status === 'PLACED' ? 'Active' : 'Cancelled'}</span></div>
             <div style={{ flex: 1, fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}><div>{new Date(order.createdAt).toLocaleDateString()}</div><div style={{ color: 'rgba(255,255,255,0.4)' }}>{new Date(order.createdAt).toLocaleTimeString()}</div></div>
-            <div style={{ width: '100px', textAlign: 'center' }}>{order.status === 'PLACED' && (<button onClick={() => onCancel(order.orderId)} disabled={cancellingId === order.orderId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, background: cancellingId === order.orderId ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', cursor: cancellingId === order.orderId ? 'wait' : 'pointer' }}><X size={12} /> {cancellingId === order.orderId ? '...' : 'Cancel'}</button>)}</div>
+            <div style={{ width: '100px', textAlign: 'center' }}>
+              {order.status === 'PLACED' ? (
+                <button onClick={() => onCancel(order.orderId)} disabled={cancellingId === order.orderId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, background: cancellingId === order.orderId ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', cursor: cancellingId === order.orderId ? 'wait' : 'pointer' }}>
+                  <X size={12} /> {cancellingId === order.orderId ? '...' : 'Cancel'}
+                </button>
+              ) : (
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>—</span>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -272,25 +281,42 @@ function TableView({ orders, toggleSort, sortField, onCancel, cancellingId }: { 
   )
 }
 
+
 function OrderCard({ order, onCancel, cancelling, isLast }: { order: Order; onCancel: (id: string) => void; cancelling: boolean; isLast: boolean }) {
   const isActive = order.status === 'PLACED'
   return (
     <div style={{ position: 'relative', marginBottom: isLast ? 0 : '16px' }}>
       <div style={{ position: 'absolute', left: '-33px', top: '20px', width: '16px', height: '16px', borderRadius: '50%', background: isActive ? '#22c55e' : '#ef4444', border: '3px solid #1a1a3e' }} />
-      <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid ' + (isActive ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'), borderRadius: '16px', overflow: 'hidden' }}>
+      <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: `1px solid ${isActive ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`, borderRadius: '16px', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, background: isActive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: isActive ? '#22c55e' : '#ef4444' }}>{isActive ? 'Active' : 'Cancelled'}</span>
             <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> {new Date(order.createdAt).toLocaleTimeString()}</span>
           </div>
-          {isActive && (<button onClick={() => onCancel(order.orderId)} disabled={cancelling} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, background: cancelling ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', cursor: cancelling ? 'wait' : 'pointer' }}><X size={14} /> {cancelling ? 'Cancelling...' : 'Cancel Order'}</button>)}
+          {isActive && (
+            <button onClick={() => onCancel(order.orderId)} disabled={cancelling} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, background: cancelling ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', cursor: cancelling ? 'wait' : 'pointer' }}>
+              <X size={14} /> {cancelling ? 'Cancelling...' : 'Cancel Order'}
+            </button>
+          )}
         </div>
         <div style={{ padding: '16px 20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-            <div><div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Order ID</div><div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)' }}>{order.orderId.substring(0, 16)}...</div></div>
-            <div><div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Customer</div><div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}><User size={14} color="#60a5fa" /> {order.customerId?.split('-')[0] || 'N/A'}</div></div>
-            <div><div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Items</div><div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}><Package size={14} color="#a855f7" /> {order.items?.length || 0} items</div></div>
-            <div><div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Total</div><div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#22c55e', fontWeight: 700, fontSize: '1rem' }}><DollarSign size={16} /> {(order.totalAmount || 0).toFixed(2)}</div></div>
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Order ID</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)' }}>{order.orderId.substring(0, 16)}...</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Customer</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}><User size={14} color="#60a5fa" /> {order.customerId?.split('-')[0] || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Items</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}><Package size={14} color="#a855f7" /> {order.items?.length || 0} items</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '4px' }}>Total</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#22c55e', fontWeight: 700, fontSize: '1rem' }}><DollarSign size={16} /> {(order.totalAmount || 0).toFixed(2)}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -300,7 +326,7 @@ function OrderCard({ order, onCancel, cancelling, isLast }: { order: Order; onCa
 
 function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string | number; color: string }) {
   return (
-    <div style={{ background: color + '15', border: '1px solid ' + color + '30', borderRadius: '14px', padding: '16px 20px' }}>
+    <div style={{ background: `${color}15`, border: `1px solid ${color}30`, borderRadius: '14px', padding: '16px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color }}>{icon}<span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{label}</span></div>
       <div style={{ fontSize: '1.5rem', fontWeight: 800, color }}>{value}</div>
     </div>
@@ -315,5 +341,3 @@ function InputField({ label, value, onChange, type = 'text', placeholder = '' }:
     </div>
   )
 }
-
-

@@ -39,31 +39,5 @@ export interface EventStorePort {
   ): void;
 }
 
-export interface SnapshotStorePort {
-  /**
-   * Get the latest snapshot for an aggregate
-   */
-  getLatest(aggregateId: string): Promise<Snapshot | null>;
-
-  /**
-   * Save a new snapshot
-   */
-  save(snapshot: Snapshot): Promise<void>;
-
-  /**
-   * Get snapshot by specific version
-   */
-  getByVersion(aggregateId: string, version: number): Promise<Snapshot | null>;
-}
-
-export interface Snapshot {
-  aggregateId: string;
-  version: number;
-  timestamp: number;
-  state: Record<string, unknown>;
-  schemaVersion: string;
-  metadata: {
-    eventCount: number;
-    aggregateSize: number;
-  };
-}
+// SnapshotStorePort moved to SnapshotStorePort.ts to avoid duplication
+// Import Snapshot from types/Snapshot.ts for single source of truth

@@ -142,4 +142,4 @@ kiroween/
 | **Generic Skeleton** | `packages/` | Zero domain-specific code |
 | **App #1** | `demo/` | E-commerce order management |
 | **App #2** | `demo-iot/` | IoT sensor monitoring |
-| **Shared Patterns** | Both apps | CQRS, Event Sourcing, Lambda, DynamoDB |
+| **Shared Patterns** | Both apps | CQRS, Event Sourcing, Lambda, DynamoD

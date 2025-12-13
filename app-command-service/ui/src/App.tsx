@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { Send, Zap, User, Package, DollarSign, XCircle, CheckCircle, Clock } from 'lucide-react'
-
-// Configure your API URL here after deployment
-const API_URL = 'YOUR_COMMAND_API_URL'
-
-interface CommandResult {
+// Nexus Command Service - Skeleton Crew App #1
+// Extracted from the main demo - Command/Write operations only
+import { useState, useEffect } from 'react'
+import { Activity, Zap, Database, GitBranch, Sparkles, Shield, Cpu, Globe, Send, Layers } from 'lucide-react'
+import OrderDashboard from './components/OrderDashboard'
+import LoadTester from './components/LoadTester'
+import CommandDemo from './component
   success: boolean
   command: string
   orderId?: string

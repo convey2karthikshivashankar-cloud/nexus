@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { GitBranch, RefreshCw, Clock, Hash, FileJson, Zap, ChevronDown, ChevronRight, Database, Filter, Calendar, ArrowUpDown, Activity, Layers } from 'lucide-react'
 import { Event } from '../App'
 
@@ -41,6 +41,7 @@ export default function EventTimeline({ events, onRefresh }: Props) {
 
   const eventTypes = ['all', ...new Set(events.map(e => e.eventType))]
 
+
   const groupedByDate = useMemo(() => {
     const groups: Record<string, Event[]> = {}
     filteredEvents.forEach(event => {
@@ -80,7 +81,7 @@ export default function EventTimeline({ events, onRefresh }: Props) {
             </div>
             <div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', marginBottom: '4px' }}>Event Stream</h2>
-              <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.9rem' }}>Immutable event log - {events.length} events recorded</p>
+              <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.9rem' }}>Immutable event log • {events.length} events recorded</p>
             </div>
           </div>
           <button onClick={handleRefresh} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '12px', fontWeight: 600, border: 'none', cursor: 'pointer', background: 'rgba(255, 255, 255, 0.1)', color: 'white' }}>
@@ -92,9 +93,10 @@ export default function EventTimeline({ events, onRefresh }: Props) {
           <MiniStat label="OrderPlaced" value={stats.placed} color="#22c55e" />
           <MiniStat label="OrderCancelled" value={stats.cancelled} color="#ef4444" />
           <MiniStat label="Aggregates" value={stats.aggregates} color="#3b82f6" />
-          <MiniStat label="Max Version" value={'v' + stats.maxVersion} color="#f97316" />
+          <MiniStat label="Max Version" value={`v${stats.maxVersion}`} color="#f97316" />
         </div>
       </div>
+
 
       <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -131,6 +133,7 @@ export default function EventTimeline({ events, onRefresh }: Props) {
   )
 }
 
+
 function TimelineView({ groupedByDate, expandedRows, toggleRow, getEventStyle }: any) {
   return (
     <div style={{ padding: '24px', maxHeight: '600px', overflowY: 'auto' }}>
@@ -142,7 +145,7 @@ function TimelineView({ groupedByDate, expandedRows, toggleRow, getEventStyle }:
             </div>
             <div>
               <div style={{ fontWeight: 700, color: 'white', fontSize: '1.05rem' }}>{date}</div>
-              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>{dateEvents.length} events</div>
+              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>{dateEvents.length} event{dateEvents.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
           <div style={{ marginLeft: '22px', borderLeft: '2px solid rgba(168, 85, 247, 0.2)', paddingLeft: '24px' }}>
@@ -174,7 +177,7 @@ function AggregateView({ groupedByAggregate, expandedRows, toggleRow, getEventSt
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: '2px' }}>{aggId.substring(0, 32)}...</div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{aggEvents.length} events - Latest: v{Math.max(...aggEvents.map((e: Event) => e.version || 0))}</div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{aggEvents.length} event{aggEvents.length !== 1 ? 's' : ''} • Latest: v{Math.max(...aggEvents.map((e: Event) => e.version || 0))}</div>
             </div>
           </div>
           <div style={{ padding: '12px' }}>
@@ -193,6 +196,7 @@ function AggregateView({ groupedByAggregate, expandedRows, toggleRow, getEventSt
     </div>
   )
 }
+
 
 function TableView({ events, expandedRows, toggleRow, getEventStyle }: any) {
   return (
@@ -215,13 +219,13 @@ function TableView({ events, expandedRows, toggleRow, getEventStyle }: any) {
             <div key={event.eventId}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', background: index % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.01)' }}>
                 <div style={{ width: '50px' }}><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, background: style.bg, color: style.color }}>{events.length - index}</span></div>
-                <div style={{ flex: 2 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', background: style.bg, border: '1px solid ' + style.border, color: style.color }}><Zap size={12} /> {event.eventType}</span></div>
+                <div style={{ flex: 2 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', background: style.bg, border: `1px solid ${style.border}`, color: style.color }}><Zap size={12} /> {event.eventType}</span></div>
                 <div style={{ flex: 2, fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>{event.aggregateId?.substring(0, 20) || 'N/A'}...</div>
                 <div style={{ width: '80px', display: 'flex', alignItems: 'center', gap: '4px' }}><Hash size={12} color="rgba(255,255,255,0.3)" /><span style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>v{event.version}</span></div>
                 <div style={{ flex: 1, fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>{date.toLocaleDateString()}</div>
                 <div style={{ flex: 1, fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>{date.toLocaleTimeString()}</div>
                 <div style={{ width: '80px', textAlign: 'center' }}>
-                  <button onClick={() => toggleRow(event.eventId)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', background: isExpanded ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)', border: '1px solid ' + (isExpanded ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'), color: isExpanded ? '#a855f7' : 'rgba(255, 255, 255, 0.5)' }}>
+                  <button onClick={() => toggleRow(event.eventId)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', background: isExpanded ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)', border: `1px solid ${isExpanded ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`, color: isExpanded ? '#a855f7' : 'rgba(255, 255, 255, 0.5)' }}>
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   </button>
                 </div>
@@ -235,17 +239,18 @@ function TableView({ events, expandedRows, toggleRow, getEventStyle }: any) {
   )
 }
 
+
 function EventCard({ event, style, isExpanded, onToggle, compact = false }: { event: Event; style: any; isExpanded: boolean; onToggle: () => void; compact?: boolean }) {
   const date = new Date(event.timestamp)
   return (
-    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid ' + style.border, borderRadius: '12px', overflow: 'hidden' }}>
+    <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: `1px solid ${style.border}`, borderRadius: '12px', overflow: 'hidden' }}>
       <div style={{ padding: compact ? '12px 16px' : '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', background: style.bg, border: '1px solid ' + style.border, color: style.color }}><Zap size={12} /> {event.eventType}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', background: style.bg, border: `1px solid ${style.border}`, color: style.color }}><Zap size={12} /> {event.eventType}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}><Clock size={12} /> {date.toLocaleTimeString()}</span>
           <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>v{event.version}</span>
         </div>
-        <button onClick={onToggle} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', background: isExpanded ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)', border: '1px solid ' + (isExpanded ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'), color: isExpanded ? '#a855f7' : 'rgba(255, 255, 255, 0.5)' }}>
+        <button onClick={onToggle} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', background: isExpanded ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)', border: `1px solid ${isExpanded ? 'rgba(168, 85, 247, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`, color: isExpanded ? '#a855f7' : 'rgba(255, 255, 255, 0.5)' }}>
           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
       </div>
@@ -260,11 +265,11 @@ function PayloadView({ event }: { event: Event }) {
     <div style={{ padding: '0 20px 16px', background: 'rgba(168, 85, 247, 0.03)', borderTop: '1px solid rgba(168, 85, 247, 0.1)' }}>
       <div style={{ background: 'rgba(0, 0, 0, 0.3)', border: '1px solid rgba(168, 85, 247, 0.15)', borderRadius: '10px', padding: '14px', marginTop: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}><FileJson size={12} /> Event Payload</div>
-        <pre style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.75)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, lineHeight: 1.5 }}>{JSON.stringify(event.payload, null, 2)}</pre>
+        <pre style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.75)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, lineHeight: 1.5 }}>{JSON.stringify(event.payload, null, 2)}</pre>
         {event.metadata && Object.keys(event.metadata).length > 0 && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '14px', marginBottom: '10px', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}><Database size={12} /> Metadata</div>
-            <pre style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, lineHeight: 1.5 }}>{JSON.stringify(event.metadata, null, 2)}</pre>
+            <pre style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, lineHeight: 1.5 }}>{JSON.stringify(event.metadata, null, 2)}</pre>
           </>
         )}
       </div>
@@ -296,4 +301,3 @@ function MiniStat({ label, value, color }: { label: string; value: string | numb
     </div>
   )
 }
-
